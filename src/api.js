@@ -1,8 +1,8 @@
 import axios from "axios";
 
 const API = axios.create({
- baseURL: "https://ai-chat-rxzk.onrender.com/api/",
- //baseURL:"http://localhost:8084/api/",
+ baseURL: "https://ai-chat-rxzk.onrender.com/api/", // deploy render sever 
+ //baseURL:"http://localhost:8084/api/", //local server 
 });
 
 export const askAI = (prompt) => API.post("/ask-ai", { prompt });

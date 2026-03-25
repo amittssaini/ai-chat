@@ -3,18 +3,15 @@ const chatService = new Chat();
 const postChat=async(req,res)=>{
     try {
         const {prompt,response}= req.body;
-        // checking the old version
         const previousPresent= await chatService.findPrompt(prompt)
+          console.log("previous present : : ", previousPresent);
             if(previousPresent==true)
             {
-                res.status(200).json({
-            message: "Already saved",
-            alreadyExists: true,
-        });
+               return res.status(200).json({ message: "Already saved", alreadyExists: true, });
             }
         const checking = await chatService.saveChat(prompt,response);
         console.log(checking);
-        res.status(200).json({prompt,response,alreadyExists: false,})
+         return res.status(200).json({prompt,response,alreadyExists: false,})
     } catch (error) {
         res.send(error)
     }
