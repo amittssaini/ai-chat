@@ -10,6 +10,7 @@
             value={data.value}
             onChange={(e) => data.onChange(e.target.value)}
             placeholder="Ask anything..."
+            onKeyDown={data.handleKeyDown}
             className="w-full h-28 p-3 rounded-lg bg-gray-900 border border-gray-600 focus:outline-none focus:border-blue-500 text-sm resize-none"
         />
 

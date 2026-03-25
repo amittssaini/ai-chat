@@ -1,10 +1,22 @@
 import chatModel from "../models/chat.model.js";
 class Chat{
 
+
+    async findPrompt(prompt){
+        try {
+                const response = await chatModel.findOne({prompt});
+                if(response)
+                    return true;
+            return false;
+            
+        } catch (error) {
+            return error;
+        }
+    }
     async saveChat(prompt,response){
-  
        // console.log(prom)
         try {
+
             const newChatDoc = new  chatModel({prompt,response});
             const resp = await newChatDoc.save();
             return resp
@@ -24,8 +36,9 @@ class Chat{
         }
     }
 
+
     async getHistoryById(id){
-           try {
+        try {
             //const response = await chatModel.find();
             const response = await chatModel.findById(id);
             console.log(response);

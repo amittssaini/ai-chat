@@ -4,7 +4,7 @@ dotenv.config();
 
 
 async function aiCall(prompt) {
-console.log("api key ",process.env.API_KEY);
+//console.log("api key ",process.env.API_KEY);
   try {
     console.log("AI call started with prompt :: ", prompt);
 

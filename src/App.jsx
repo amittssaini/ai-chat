@@ -1,139 +1,3 @@
-//   import React, { useState } from "react";
-//   import ReactFlow, { Background } from "reactflow";
-//   import "reactflow/dist/style.css";
-
-//   import InputNode from "./components/InputNode";
-//   import ResultNode from "./components/ResultNode";
-//   import Navbar from "./components/Navbar";
-//   import { askAI, saveData ,historyChat } from "./api";
-
-//   const nodeTypes = {
-//     inputNode: InputNode,
-//     resultNode: ResultNode,
-//   };
-
-//   export default function App() {
-//     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-//     const [prompt, setPrompt] = useState("");
-//     const [result, setResult] = useState("");
-//     const [history, setHistory] = useState([]);
-
-//     const nodes = [
-//       {
-//         id: "1",
-//         type: "inputNode",
-//         position: { x: 100, y: 150 },
-//         data: {
-//           value: prompt,
-//           onChange: setPrompt,
-//         },
-//       },
-//       {
-//         id: "2",
-//         type: "resultNode",
-//         position: { x: 500, y: 150 },
-//         data: {
-//           value: result,
-//         },
-//       },
-//     ];
-
-//     const edges = [
-//       {
-//         id: "e1-2",
-//         source: "1",
-//         target: "2",
-//         animated: true,
-//       },
-//     ];
-
-//     const toggleSidebar = () => {
-//   setIsSidebarOpen((prev) => !prev);
-// };
-//     const handleRun = async () => {
-//       try {
-//         const res = await askAI(prompt);
-//         setResult(res.data.answer);
-
-//         // store in local history (frontend)
-//         setHistory((prev) => [
-//           { prompt, result: res.data.answer },
-//           ...prev,
-//         ]);
-//       } catch (err) {
-//         console.error(err);
-//         alert("Error fetching AI response");
-//       }
-//     };
-
-//     const handleSave = async () => {
-//       try {
-//         await saveData({ prompt, result });
-//         alert("Saved to DB ✅");
-//       } catch (err) {
-//         console.error(err);
-//         alert("Error saving data");
-//       }
-//     };
-//    const  handleHistorySelect=()=>{
-
-//     }
-
-//     const handleHistoryClick = async() => {
-//       // console.log(history);
-//       // alert("Check console for history (we can build UI next)");
-//       try {
-//         const res = await historyChat();
-//         setHistory(res.data)
-//        // setResult(res.data.answer);
-//        console.log(res.data)
-//        console.log(history)
-
-//         // store in local history (frontend)
-        
-//       } catch (err) {
-//         console.error(err);
-//         alert("Error fetching AI response");
-//       }
-//     };
-
-//     return (
-//       <div className="h-screen bg-gray-900 text-white flex flex-col">
-        
-//         <Navbar onHistoryClick={toggleSidebar} />
-
-//           <Sidebar
-//   history={history}
-//   onSelect={handleHistorySelect}
-//   isOpen={isSidebarOpen}
-// />
-
-//         {/* Buttons */}
-//         <div className="p-4 flex gap-3 border-b border-gray-700">
-//           <button
-//             onClick={handleRun}
-//             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
-//           >
-//             Run Flow
-//           </button>
-
-//           <button
-//             onClick={handleSave}
-//             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
-//           >
-//             Save
-//           </button>
-//         </div>
-
-//         {/* Flow */}
-//         <div className="flex-1">
-//           <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes}>
-//             <Background />
-//           </ReactFlow>
-//         </div>
-//       </div>
-//     );
-//   }
 
 
 import React, { useState } from "react";
@@ -159,6 +23,14 @@ export default function App() {
   const [result, setResult] = useState("");
   const [history, setHistory] = useState([]);
 
+  const handleKeyDown=(e)=>{
+    console.log("handle enter key ");
+    if(e.key==="Enter") {
+    e.preventDefault();
+    handleRun();
+  }
+  }
+
   const nodes = [
     {
       id: "1",
@@ -167,6 +39,7 @@ export default function App() {
       data: {
         value: prompt,
         onChange: setPrompt,
+        handleKeyDown:handleKeyDown
       },
     },
     {
@@ -189,7 +62,7 @@ export default function App() {
     },
   ];
 
-  // ✅ Toggle Sidebar + Fetch History
+  //  Toggle Sidebar + Fetch History
   const toggleSidebar = async () => {
     setIsSidebarOpen((prev) => !prev);
 
@@ -204,9 +77,15 @@ export default function App() {
     }
   };
 
-  // ✅ Run AI
+  
+  //  Run AI
   const handleRun = async () => {
     try {
+      if(prompt==="")
+      {
+        alert("add some prompt to fetch the answer")
+        return;
+      }
       setIsLoading(true)
       const res = await askAI(prompt);
       setResult(res.data.answer);
@@ -227,17 +106,29 @@ export default function App() {
       setIsLoading(false)
     }
   };
-
+  
+  
+  
   // ✅ Save to DB
   const handleSave = async () => {
     try {
-      await saveData({ prompt, response:result });
-      alert("Saved to DB ✅");
+      const responseData = await saveData({ prompt, response:result });
+      if(responseData.data.alreadyExists)
+      alert(" already Saved to DB ");
+    else
+    {
+      alert("saved to db ")
+    }
     } catch (err) {
       console.error(err);
       alert("Error saving data");
     }
   };
+
+  const onClickSave=()=>{
+    setPrompt("");
+    setResult("");
+  }
 
   // ✅ CLICK HISTORY ITEM
   // const handleHistorySelect = async (item) => {
@@ -293,9 +184,22 @@ export default function App() {
 
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
-        >
+          disabled={!result || isLoading}
+        //   className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
+        // >
+        className={`px-4 py-2 rounded-lg transition ${
+            !result || isLoading
+              ? "bg-green-400 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+  }`}>
           Save
+        </button>
+
+                <button
+          onClick={onClickSave}
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg"
+        >
+          Clear
         </button>
       </div>
 
