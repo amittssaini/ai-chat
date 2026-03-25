@@ -154,6 +154,7 @@ const nodeTypes = {
 
 export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [result, setResult] = useState("");
   const [history, setHistory] = useState([]);
@@ -174,6 +175,7 @@ export default function App() {
       position: { x: 500, y: 150 },
       data: {
         value: result,
+        isLoading:isLoading,
       },
     },
   ];
@@ -205,6 +207,7 @@ export default function App() {
   // ✅ Run AI
   const handleRun = async () => {
     try {
+      setIsLoading(true)
       const res = await askAI(prompt);
       setResult(res.data.answer);
 
@@ -219,6 +222,9 @@ export default function App() {
     } catch (err) {
       console.error(err);
       alert("Error fetching AI response");
+    }
+    finally{
+      setIsLoading(false)
     }
   };
 
