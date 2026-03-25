@@ -1,121 +1,304 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+//   import React, { useState } from "react";
+//   import ReactFlow, { Background } from "reactflow";
+//   import "reactflow/dist/style.css";
 
-function App() {
-  const [count, setCount] = useState(0)
+//   import InputNode from "./components/InputNode";
+//   import ResultNode from "./components/ResultNode";
+//   import Navbar from "./components/Navbar";
+//   import { askAI, saveData ,historyChat } from "./api";
+
+//   const nodeTypes = {
+//     inputNode: InputNode,
+//     resultNode: ResultNode,
+//   };
+
+//   export default function App() {
+//     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//     const [prompt, setPrompt] = useState("");
+//     const [result, setResult] = useState("");
+//     const [history, setHistory] = useState([]);
+
+//     const nodes = [
+//       {
+//         id: "1",
+//         type: "inputNode",
+//         position: { x: 100, y: 150 },
+//         data: {
+//           value: prompt,
+//           onChange: setPrompt,
+//         },
+//       },
+//       {
+//         id: "2",
+//         type: "resultNode",
+//         position: { x: 500, y: 150 },
+//         data: {
+//           value: result,
+//         },
+//       },
+//     ];
+
+//     const edges = [
+//       {
+//         id: "e1-2",
+//         source: "1",
+//         target: "2",
+//         animated: true,
+//       },
+//     ];
+
+//     const toggleSidebar = () => {
+//   setIsSidebarOpen((prev) => !prev);
+// };
+//     const handleRun = async () => {
+//       try {
+//         const res = await askAI(prompt);
+//         setResult(res.data.answer);
+
+//         // store in local history (frontend)
+//         setHistory((prev) => [
+//           { prompt, result: res.data.answer },
+//           ...prev,
+//         ]);
+//       } catch (err) {
+//         console.error(err);
+//         alert("Error fetching AI response");
+//       }
+//     };
+
+//     const handleSave = async () => {
+//       try {
+//         await saveData({ prompt, result });
+//         alert("Saved to DB ✅");
+//       } catch (err) {
+//         console.error(err);
+//         alert("Error saving data");
+//       }
+//     };
+//    const  handleHistorySelect=()=>{
+
+//     }
+
+//     const handleHistoryClick = async() => {
+//       // console.log(history);
+//       // alert("Check console for history (we can build UI next)");
+//       try {
+//         const res = await historyChat();
+//         setHistory(res.data)
+//        // setResult(res.data.answer);
+//        console.log(res.data)
+//        console.log(history)
+
+//         // store in local history (frontend)
+        
+//       } catch (err) {
+//         console.error(err);
+//         alert("Error fetching AI response");
+//       }
+//     };
+
+//     return (
+//       <div className="h-screen bg-gray-900 text-white flex flex-col">
+        
+//         <Navbar onHistoryClick={toggleSidebar} />
+
+//           <Sidebar
+//   history={history}
+//   onSelect={handleHistorySelect}
+//   isOpen={isSidebarOpen}
+// />
+
+//         {/* Buttons */}
+//         <div className="p-4 flex gap-3 border-b border-gray-700">
+//           <button
+//             onClick={handleRun}
+//             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+//           >
+//             Run Flow
+//           </button>
+
+//           <button
+//             onClick={handleSave}
+//             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
+//           >
+//             Save
+//           </button>
+//         </div>
+
+//         {/* Flow */}
+//         <div className="flex-1">
+//           <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes}>
+//             <Background />
+//           </ReactFlow>
+//         </div>
+//       </div>
+//     );
+//   }
+
+
+import React, { useState } from "react";
+import ReactFlow, { Background } from "reactflow";
+import "reactflow/dist/style.css";
+
+import InputNode from "./components/InputNode";
+import ResultNode from "./components/ResultNode";
+import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar"; // ✅ ADD THIS
+
+import { askAI, saveData, historyChat,getHistoryById } from "./api";
+
+const nodeTypes = {
+  inputNode: InputNode,
+  resultNode: ResultNode,
+};
+
+export default function App() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [prompt, setPrompt] = useState("");
+  const [result, setResult] = useState("");
+  const [history, setHistory] = useState([]);
+
+  const nodes = [
+    {
+      id: "1",
+      type: "inputNode",
+      position: { x: 100, y: 150 },
+      data: {
+        value: prompt,
+        onChange: setPrompt,
+      },
+    },
+    {
+      id: "2",
+      type: "resultNode",
+      position: { x: 500, y: 150 },
+      data: {
+        value: result,
+      },
+    },
+  ];
+
+  const edges = [
+    {
+      id: "e1-2",
+      source: "1",
+      target: "2",
+      animated: true,
+    },
+  ];
+
+  // ✅ Toggle Sidebar + Fetch History
+  const toggleSidebar = async () => {
+    setIsSidebarOpen((prev) => !prev);
+
+    // fetch history when opening
+    if (!isSidebarOpen) {
+      try {
+        const res = await historyChat();
+        setHistory(res.data); // expect [{id, prompt}]
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  // ✅ Run AI
+  const handleRun = async () => {
+    try {
+      const res = await askAI(prompt);
+      setResult(res.data.answer);
+
+      // local history
+      setHistory((prev) => [
+        {
+          id: Date.now(),
+          prompt,
+        },
+        ...prev,
+      ]);
+    } catch (err) {
+      console.error(err);
+      alert("Error fetching AI response");
+    }
+  };
+
+  // ✅ Save to DB
+  const handleSave = async () => {
+    try {
+      await saveData({ prompt, response:result });
+      alert("Saved to DB ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving data");
+    }
+  };
+
+  // ✅ CLICK HISTORY ITEM
+  // const handleHistorySelect = async (item) => {
+  //   try {
+  //     setPrompt(item.prompt); // show in input
+
+  //     const res = await askAI(item.prompt); // call API again
+  //     setResult(res.data.answer);
+
+  //     setIsSidebarOpen(false); // close sidebar after click (optional)
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Error loading history item");
+  //   }
+  // };
+
+  const handleHistorySelect = async (item) => {
+  try {
+    console.log("id is :: ", item._id);
+    const res = await getHistoryById(item._id);
+      console.log("response :: ",res.data)
+    setPrompt(res.data.prompt);
+    setResult(res.data.response);
+
+    setIsSidebarOpen(false);
+  } catch (err) {
+    console.error(err);
+    alert("Error fetching history item");
+  }
+};
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+    <div className="h-screen bg-gray-900 text-white flex flex-col">
+
+      {/* Navbar */}
+      <Navbar onHistoryClick={toggleSidebar} />
+
+      {/* Sidebar */}
+      <Sidebar
+        history={history}
+        onSelect={handleHistorySelect}
+        isOpen={isSidebarOpen}
+      />
+
+      {/* Buttons */}
+      <div className="p-4 flex gap-3 border-b border-gray-700">
         <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          onClick={handleRun}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
         >
-          Count is {count}
+          Run Flow
         </button>
-      </section>
 
-      <div className="ticks"></div>
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
+        >
+          Save
+        </button>
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* Flow */}
+      <div className="flex-1">
+        <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes}>
+          <Background />
+        </ReactFlow>
+      </div>
+    </div>
+  );
 }
-
-export default App

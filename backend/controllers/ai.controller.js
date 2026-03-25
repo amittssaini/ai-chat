@@ -1,7 +1,10 @@
 import dotenv from 'dotenv'
 dotenv.config();
 
+
+
 async function aiCall(prompt) {
+console.log("api key ",process.env.API_KEY);
   try {
     console.log("AI call started with prompt :: ", prompt);
 
@@ -10,11 +13,13 @@ async function aiCall(prompt) {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.API_KEY}`,
+          Authorization: `Bearer ${process.env.AI_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           model: "arcee-ai/trinity-large-preview:free",
+          //model:"nvidia/nemotron-3-super-120b-a12b:free",
+          //model:"minimax/minimax-m2.5:free",
           messages: [
             {
               role: "user",
@@ -32,7 +37,7 @@ async function aiCall(prompt) {
     }
 
     const data = await response.json();
-
+        //console.log(data)
     return data.choices[0].message.content;
 
   } catch (error) {
@@ -50,8 +55,8 @@ const postAI = async (req, res) => {
     const { prompt } = req.body;
 
     const output = await aiCall(prompt); 
-
-    res.json({ answer: output });
+   console.log("response is :: ",output)
+    res.status(200).json({ answer: output });
 
   } catch (error) {
     console.error(error);
