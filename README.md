@@ -1,4 +1,4 @@
-# 🤖 Ask AI Flow App
+# 🤖 Ask AI CHAT App
 
 A modern **MERN + React Flow** based web application where users can input prompts, get AI-generated responses, and visualize the flow between input and output nodes.
 
